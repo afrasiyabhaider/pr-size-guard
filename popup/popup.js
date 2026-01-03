@@ -12,8 +12,16 @@
     large: { files: 30, lines: 1000 }
   };
 
+  const DEFAULT_COLORS = {
+    small: '#2ea44f',
+    medium: '#d29922',
+    large: '#cf222e',
+    critical: '#8b0000'
+  };
+
   const form = document.getElementById('settings-form');
   const resetBtn = document.getElementById('reset-btn');
+  const resetColorsBtn = document.getElementById('reset-colors-btn');
   const statusEl = document.getElementById('status');
 
   // ============================================================
@@ -37,6 +45,15 @@
     };
   }
 
+  function getColorValues() {
+    return {
+      small: form.color_small.value,
+      medium: form.color_medium.value,
+      large: form.color_large.value,
+      critical: form.color_critical.value
+    };
+  }
+
   function setFormValues(thresholds) {
     form.small_files.value = thresholds.small.files;
     form.small_lines.value = thresholds.small.lines;
@@ -46,10 +63,16 @@
     form.large_lines.value = thresholds.large.lines;
   }
 
+  function setColorValues(colors) {
+    form.color_small.value = colors.small;
+    form.color_medium.value = colors.medium;
+    form.color_large.value = colors.large;
+    form.color_critical.value = colors.critical;
+  }
+
   function validateThresholds(thresholds) {
     const { small, medium, large } = thresholds;
 
-    // Check all values are positive
     const allPositive = [
       small.files, small.lines,
       medium.files, medium.lines,
@@ -60,7 +83,6 @@
       return { valid: false, message: 'All values must be greater than 0' };
     }
 
-    // Check ordering: small < medium < large
     if (small.files >= medium.files || medium.files >= large.files) {
       return { valid: false, message: 'File thresholds must increase: Small < Medium < Large' };
     }
@@ -92,17 +114,20 @@
 
   async function loadSettings() {
     try {
-      const result = await chrome.storage.sync.get('thresholds');
+      const result = await chrome.storage.sync.get(['thresholds', 'colors']);
       const thresholds = result.thresholds || DEFAULTS;
+      const colors = result.colors || DEFAULT_COLORS;
       setFormValues(thresholds);
+      setColorValues(colors);
     } catch (e) {
       setFormValues(DEFAULTS);
+      setColorValues(DEFAULT_COLORS);
     }
   }
 
-  async function saveSettings(thresholds) {
+  async function saveSettings(thresholds, colors) {
     try {
-      await chrome.storage.sync.set({ thresholds });
+      await chrome.storage.sync.set({ thresholds, colors });
       showStatus('Settings saved!', 'success');
       return true;
     } catch (e) {
@@ -119,6 +144,7 @@
     e.preventDefault();
 
     const thresholds = getFormValues();
+    const colors = getColorValues();
     const validation = validateThresholds(thresholds);
 
     if (!validation.valid) {
@@ -126,12 +152,17 @@
       return;
     }
 
-    await saveSettings(thresholds);
+    await saveSettings(thresholds, colors);
   });
 
   resetBtn.addEventListener('click', () => {
     setFormValues(DEFAULTS);
     showStatus('Reset to defaults (not saved yet)', 'success');
+  });
+
+  resetColorsBtn.addEventListener('click', () => {
+    setColorValues(DEFAULT_COLORS);
+    showStatus('Colors reset (not saved yet)', 'success');
   });
 
   // ============================================================

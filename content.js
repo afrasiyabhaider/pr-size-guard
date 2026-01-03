@@ -26,6 +26,13 @@
     large: { files: 30, lines: 1000 }
   };
 
+  const DEFAULT_COLORS = {
+    small: '#2ea44f',
+    medium: '#d29922',
+    large: '#cf222e',
+    critical: '#8b0000'
+  };
+
   // Fallback selectors for GitHub DOM changes
   const SELECTORS = {
     // PR page header targets
@@ -73,6 +80,7 @@
   // ============================================================
 
   let thresholds = DEFAULTS;
+  let colors = DEFAULT_COLORS;
   let observer = null;
   let lastUrl = location.href;
 
@@ -234,6 +242,11 @@
     badge.className = `${BADGE_CLASS} pr-size-guard--${category}`;
     badge.textContent = labels[category];
 
+    // Apply custom colors if available
+    if (colors[category]) {
+      badge.style.backgroundColor = colors[category];
+    }
+
     if (stats) {
       badge.title = [
         `PR Size: ${labels[category]}`,
@@ -309,7 +322,10 @@
       badge.className = `${LIST_BADGE_CLASS} pr-size-guard--${category}`;
       badge.textContent = category.charAt(0).toUpperCase(); // S, M, L, C
       badge.title = `${category.charAt(0).toUpperCase() + category.slice(1)} PR: +${additions} / -${deletions}`;
-      badge.style.cssText = 'margin-left: 6px; font-size: 10px; padding: 1px 4px; border-radius: 3px; vertical-align: middle;';
+      
+      // Apply custom colors
+      const bgColor = colors[category] || DEFAULT_COLORS[category];
+      badge.style.cssText = `margin-left: 6px; font-size: 10px; padding: 1px 4px; border-radius: 3px; vertical-align: middle; background-color: ${bgColor}; color: #fff;`;
 
       titleLink.parentNode.insertBefore(badge, titleLink.nextSibling);
     });
@@ -426,12 +442,14 @@
   /**
    * Load thresholds from storage
    */
-  async function loadThresholds() {
+  async function loadSettings() {
     try {
-      const result = await chrome.storage.sync.get('thresholds');
+      const result = await chrome.storage.sync.get(['thresholds', 'colors']);
       thresholds = result.thresholds || DEFAULTS;
+      colors = result.colors || DEFAULT_COLORS;
     } catch (e) {
       thresholds = DEFAULTS;
+      colors = DEFAULT_COLORS;
     }
   }
 
@@ -440,9 +458,21 @@
    */
   function setupStorageListener() {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'sync' && changes.thresholds) {
+      if (area !== 'sync') return;
+      
+      let needsRefresh = false;
+      
+      if (changes.thresholds) {
         thresholds = changes.thresholds.newValue || DEFAULTS;
-        // Re-process current page
+        needsRefresh = true;
+      }
+      
+      if (changes.colors) {
+        colors = changes.colors.newValue || DEFAULT_COLORS;
+        needsRefresh = true;
+      }
+      
+      if (needsRefresh) {
         if (isPRPage()) {
           processPRPage();
         } else if (isPRListPage()) {
@@ -457,7 +487,7 @@
   // ============================================================
 
   async function init() {
-    await loadThresholds();
+    await loadSettings();
     setupStorageListener();
     setupNavigationListeners();
 
