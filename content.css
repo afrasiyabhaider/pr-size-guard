@@ -106,4 +106,11 @@
   user-select: none;
 }
 
-/* List badge colors inherit from CSS variables - no duplicates needed */
+/* List badges use same color classes as main badge - colors inherit from CSS variables */
+.pr-size-guard-list-badge.pr-size-guard--small,
+.pr-size-guard-list-badge.pr-size-guard--medium,
+.pr-size-guard-list-badge.pr-size-guard--large,
+.pr-size-guard-list-badge.pr-size-guard--critical,
+.pr-size-guard-list-badge.pr-size-guard--unavailable {
+  color: var(--psg-color-text);
+}

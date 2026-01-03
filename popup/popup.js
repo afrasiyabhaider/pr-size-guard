@@ -6,11 +6,9 @@
 (function () {
   'use strict';
 
-  // Use shared constants (loaded via script tag)
-  const { DEFAULTS, DEFAULT_COLORS } = window.PRSizeGuard || {
-    DEFAULTS: { small: { files: 5, lines: 100 }, medium: { files: 15, lines: 400 }, large: { files: 30, lines: 1000 } },
-    DEFAULT_COLORS: { small: '#2ea44f', medium: '#d29922', large: '#cf222e', critical: '#8b0000' }
-  };
+  // Use shared constants (loaded via script tag in popup.html)
+  const { DEFAULTS, DEFAULT_COLORS, TIMING } = window.PRSizeGuard;
+  const { STATUS_DISPLAY_MS } = TIMING;
 
   const form = document.getElementById('settings-form');
   const resetBtn = document.getElementById('reset-btn');
@@ -99,7 +97,7 @@
 
     setTimeout(() => {
       statusEl.hidden = true;
-    }, 3000);
+    }, STATUS_DISPLAY_MS);
   }
 
   // ============================================================

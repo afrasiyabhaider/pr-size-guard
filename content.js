@@ -21,20 +21,19 @@
   const LIST_BADGE_CLASS = 'pr-size-guard-list-badge';
 
   // Use shared constants (loaded via manifest)
-  const { DEFAULTS, DEFAULT_COLORS, LABELS } = window.PRSizeGuard || {
-    DEFAULTS: { small: { files: 5, lines: 100 }, medium: { files: 15, lines: 400 }, large: { files: 30, lines: 1000 } },
-    DEFAULT_COLORS: { small: '#2ea44f', medium: '#d29922', large: '#cf222e', critical: '#8b0000' },
-    LABELS: { small: 'Small', medium: 'Medium', large: 'Large', critical: 'Critical', unavailable: 'Size: ?' }
-  };
+  const { DEFAULTS, DEFAULT_COLORS, LABELS, TIMING } = window.PRSizeGuard;
+
+  // Destructure timing constants
+  const { 
+    RETRY_BASE_DELAY_MS, 
+    MAX_RETRY_ATTEMPTS, 
+    OBSERVER_TIMEOUT_MS, 
+    NAVIGATION_DEBOUNCE_MS 
+  } = TIMING;
 
   // Performance: Compile regex once
   const PR_PAGE_REGEX = /github\.com\/[^/]+\/[^/]+\/pull\/\d+/;
   const PR_LIST_REGEX = /github\.com\/[^/]+\/[^/]+\/pulls/;
-
-  // Named timing constants
-  const RETRY_BASE_DELAY_MS = 100;
-  const OBSERVER_TIMEOUT_MS = 10000;
-  const NAVIGATION_DEBOUNCE_MS = 150;
 
   // Fallback selectors for GitHub DOM changes
   const SELECTORS = {
@@ -238,8 +237,8 @@
     badge.className = `${BADGE_CLASS} pr-size-guard--${category}`;
     badge.textContent = LABELS[category];
 
-    // Apply custom colors if available
-    if (colors[category]) {
+    // Apply custom colors only if user changed from defaults (preserve CSS variable dark mode)
+    if (colors[category] && colors[category] !== DEFAULT_COLORS[category]) {
       badge.style.backgroundColor = colors[category];
     }
 
@@ -264,7 +263,7 @@
   function processPRPage(attempt = 0) {
     const stats = extractStats();
     
-    if (!stats && attempt < 5) {
+    if (!stats && attempt < MAX_RETRY_ATTEMPTS) {
       // Exponential backoff: 100, 200, 400, 800, 1600ms
       const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
       setTimeout(() => processPRPage(attempt + 1), delay);
@@ -319,9 +318,14 @@
       badge.textContent = category.charAt(0).toUpperCase(); // S, M, L, C
       badge.title = `${category.charAt(0).toUpperCase() + category.slice(1)} PR: +${additions} / -${deletions}`;
       
-      // Apply custom colors
-      const bgColor = colors[category] || DEFAULT_COLORS[category];
-      badge.style.cssText = `margin-left: 6px; font-size: 10px; padding: 1px 4px; border-radius: 3px; vertical-align: middle; background-color: ${bgColor}; color: #fff;`;
+      // Base styles (colors handled by CSS classes, custom colors applied only if changed)
+      badge.style.cssText = 'margin-left: 6px; font-size: 10px; padding: 1px 4px; border-radius: 3px; vertical-align: middle;';
+      
+      // Only override color if user customized it (preserve CSS variable dark mode)
+      if (colors[category] && colors[category] !== DEFAULT_COLORS[category]) {
+        badge.style.backgroundColor = colors[category];
+        badge.style.color = '#fff';
+      }
 
       titleLink.parentNode.insertBefore(badge, titleLink.nextSibling);
     });
