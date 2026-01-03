@@ -14,7 +14,7 @@
   }
 
   // Use shared constants (loaded via script tag in popup.html)
-  const { DEFAULTS, DEFAULT_COLORS, TIMING } = window.PRSizeGuard;
+  const { DEFAULTS, DEFAULT_COLORS, TIMING, ENABLED_DEFAULT } = window.PRSizeGuard;
   const { STATUS_DISPLAY_MS } = TIMING;
 
   const form = document.getElementById('settings-form');
@@ -116,14 +116,14 @@
       const result = await chrome.storage.sync.get(['thresholds', 'colors', 'enabled']);
       const thresholds = result.thresholds || DEFAULTS;
       const colors = result.colors || DEFAULT_COLORS;
-      const enabled = result.enabled !== false; // Default to true
+      const enabled = result.enabled ?? ENABLED_DEFAULT;
       setFormValues(thresholds);
       setColorValues(colors);
       enabledToggle.checked = enabled;
     } catch (e) {
       setFormValues(DEFAULTS);
       setColorValues(DEFAULT_COLORS);
-      enabledToggle.checked = true;
+      enabledToggle.checked = ENABLED_DEFAULT;
     }
   }
 

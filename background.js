@@ -3,6 +3,9 @@
  * Handles keyboard shortcuts and extension toggle
  */
 
+// Default enabled state (must match shared/constants.js ENABLED_DEFAULT)
+const ENABLED_DEFAULT = true;
+
 // Listen for keyboard shortcut command
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'toggle-extension') {
@@ -16,7 +19,7 @@ chrome.commands.onCommand.addListener(async (command) => {
 async function toggleExtension() {
   try {
     const result = await chrome.storage.sync.get('enabled');
-    const currentState = result.enabled !== false; // Default to true
+    const currentState = result.enabled ?? ENABLED_DEFAULT;
     const newState = !currentState;
     
     await chrome.storage.sync.set({ enabled: newState });
@@ -55,6 +58,6 @@ async function updateBadge(enabled) {
 
 // Initialize badge on startup
 chrome.storage.sync.get('enabled').then(result => {
-  const enabled = result.enabled !== false;
+  const enabled = result.enabled ?? ENABLED_DEFAULT;
   updateBadge(enabled);
 });

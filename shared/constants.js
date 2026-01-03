@@ -4,6 +4,9 @@
  */
 
 const PRSizeGuard = Object.freeze({
+  // Extension enabled by default
+  ENABLED_DEFAULT: true,
+
   DEFAULTS: Object.freeze({
     small: Object.freeze({ files: 5, lines: 100 }),
     medium: Object.freeze({ files: 15, lines: 400 }),

@@ -27,7 +27,7 @@
   const LIST_BADGE_CLASS = 'pr-size-guard-list-badge';
 
   // Use shared constants (loaded via manifest)
-  const { DEFAULTS, DEFAULT_COLORS, LABELS, TIMING } = window.PRSizeGuard;
+  const { DEFAULTS, DEFAULT_COLORS, LABELS, TIMING, ENABLED_DEFAULT } = window.PRSizeGuard;
 
   // Destructure timing constants
   const { 
@@ -141,6 +141,23 @@
   }
 
   /**
+   * Parse additions and deletions from diff text
+   * @param {string} text - Text containing diff stats
+   * @returns {{ additions: number, deletions: number }}
+   */
+  function parseDiffText(text) {
+    // Match additions: +123 or 123 additions
+    const addMatch = text.match(/\+\s*([\d,]+)/) || text.match(/([\d,]+)\s*addition/i);
+    // Match deletions: -123 or −123 (minus or en-dash) or 123 deletions
+    const delMatch = text.match(/[-−]\s*([\d,]+)/) || text.match(/([\d,]+)\s*deletion/i);
+    
+    return {
+      additions: addMatch ? parseNum(addMatch[1]) : 0,
+      deletions: delMatch ? parseNum(delMatch[1]) : 0
+    };
+  }
+
+  /**
    * Check if URL is a PR detail page
    * @param {string} [url=location.href] - URL to check
    * @returns {boolean}
@@ -205,15 +222,7 @@
     const diff = $(SELECTORS.diffStats);
     if (!diff) return null;
 
-    const text = diff.textContent || '';
-    
-    // Match additions: +123 or 123 additions
-    const addMatch = text.match(/\+\s*([\d,]+)/) || text.match(/([\d,]+)\s*addition/i);
-    // Match deletions: -123 or −123 or 123 deletions
-    const delMatch = text.match(/[-−]\s*([\d,]+)/) || text.match(/([\d,]+)\s*deletion/i);
-    
-    const additions = addMatch ? parseNum(addMatch[1]) : 0;
-    const deletions = delMatch ? parseNum(delMatch[1]) : 0;
+    const { additions, deletions } = parseDiffText(diff.textContent || '');
     
     const filesEl = $(SELECTORS.filesCount);
     const filesChanged = filesEl ? parseNum(filesEl.textContent) : 0;
@@ -301,12 +310,7 @@
       const diffEl = row.querySelector('.diffstat') || row.querySelector('[class*="diffstat"]');
       if (!diffEl) return;
 
-      const text = diffEl.textContent || '';
-      const addMatch = text.match(/\+\s*([\d,]+)/);
-      const delMatch = text.match(/[-−]\s*([\d,]+)/);
-      
-      const additions = addMatch ? parseNum(addMatch[1]) : 0;
-      const deletions = delMatch ? parseNum(delMatch[1]) : 0;
+      const { additions, deletions } = parseDiffText(diffEl.textContent || '');
       const totalLines = additions + deletions;
 
       // Estimate files from the PR (not always available in list view)
@@ -327,13 +331,9 @@
       badge.textContent = category.charAt(0).toUpperCase(); // S, M, L, C
       badge.title = `${category.charAt(0).toUpperCase() + category.slice(1)} PR: +${additions} / -${deletions}`;
       
-      // Base styles (colors handled by CSS classes, custom colors applied only if changed)
-      badge.style.cssText = 'margin-left: 6px; font-size: 10px; padding: 1px 4px; border-radius: 3px; vertical-align: middle;';
-      
       // Only override color if user customized it (preserve CSS variable dark mode)
       if (colors[category] && colors[category] !== DEFAULT_COLORS[category]) {
         badge.style.backgroundColor = colors[category];
-        badge.style.color = '#fff';
       }
 
       titleLink.parentNode.insertBefore(badge, titleLink.nextSibling);
@@ -446,11 +446,11 @@
       const result = await chrome.storage.sync.get(['thresholds', 'colors', 'enabled']);
       thresholds = result.thresholds || DEFAULTS;
       colors = result.colors || DEFAULT_COLORS;
-      enabled = result.enabled !== false; // Default to true
+      enabled = result.enabled ?? ENABLED_DEFAULT;
     } catch (e) {
       thresholds = DEFAULTS;
       colors = DEFAULT_COLORS;
-      enabled = true;
+      enabled = ENABLED_DEFAULT;
     }
   }
 
@@ -474,7 +474,7 @@
       }
       
       if (changes.enabled !== undefined) {
-        enabled = changes.enabled.newValue !== false;
+        enabled = changes.enabled.newValue ?? ENABLED_DEFAULT;
         if (!enabled) {
           // Remove badges when disabled
           removeBadges();
