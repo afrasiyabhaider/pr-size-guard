@@ -42,7 +42,7 @@
   color: #ffffff;
 }
 
-.pr-size-guard--dangerous {
+.pr-size-guard--critical {
   background-color: #8b0000;
   color: #ffffff;
   animation: pr-size-guard-pulse 2s ease-in-out infinite;
@@ -79,8 +79,8 @@
   background-color: #da3633;
 }
 
-[data-color-mode="dark"] .pr-size-guard--dangerous,
-[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--dangerous {
+[data-color-mode="dark"] .pr-size-guard--critical,
+[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--critical {
   background-color: #b91c1c;
 }
 

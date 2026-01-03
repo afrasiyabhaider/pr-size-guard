@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PR Size Guard - GitHub Pull Request Reviewer",
   "version": "1.0.0",
-  "description": "Shows PR size at a glance on GitHub Pull Request pages.",
+  "description": "See GitHub PR size instantly. Shows Small/Medium/Large/Critical badges on Pull Requests. Helps code review.",
   "permissions": ["storage"],
   "host_permissions": ["https://github.com/*"],
   "content_scripts": [

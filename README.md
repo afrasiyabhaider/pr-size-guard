@@ -5,7 +5,7 @@ A Chrome extension that shows PR size at a glance on GitHub Pull Request pages.
 ## Features
 
 - **Instant visibility** — Badge appears directly in the PR header
-- **Smart classification** — Small, Medium, Large, or Dangerous
+- **Smart classification** — Small, Medium, Large, or Critical
 - **Customizable thresholds** — Adjust limits via extension popup
 - **SPA-aware** — Works with GitHub's navigation without page reloads
 - **Zero dependencies** — Runs entirely in your browser
@@ -31,7 +31,7 @@ A Chrome extension that shows PR size at a glance on GitHub Pull Request pages.
 | Small | ≤ 5 | ≤ 100 |
 | Medium | ≤ 15 | ≤ 400 |
 | Large | ≤ 30 | ≤ 1000 |
-| Dangerous | > 30 | > 1000 |
+| Critical | > 30 | > 1000 |
 
 The extension uses the **stricter** of the two metrics. If files say "Medium" but lines say "Large", the badge shows "Large".
 

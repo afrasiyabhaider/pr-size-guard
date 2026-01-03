@@ -142,17 +142,17 @@
     if (filesChanged <= t.small.files) fileCategory = 'small';
     else if (filesChanged <= t.medium.files) fileCategory = 'medium';
     else if (filesChanged <= t.large.files) fileCategory = 'large';
-    else fileCategory = 'dangerous';
+    else fileCategory = 'critical';
 
     // Classify by lines
     let lineCategory;
     if (totalLines <= t.small.lines) lineCategory = 'small';
     else if (totalLines <= t.medium.lines) lineCategory = 'medium';
     else if (totalLines <= t.large.lines) lineCategory = 'large';
-    else lineCategory = 'dangerous';
+    else lineCategory = 'critical';
 
     // Return the worse of the two
-    const order = ['small', 'medium', 'large', 'dangerous'];
+    const order = ['small', 'medium', 'large', 'critical'];
     const fileIndex = order.indexOf(fileCategory);
     const lineIndex = order.indexOf(lineCategory);
 
@@ -175,7 +175,7 @@
       small: 'Small',
       medium: 'Medium',
       large: 'Large',
-      dangerous: 'Dangerous',
+      critical: 'Critical',
       unavailable: 'Size: ?'
     };
 
