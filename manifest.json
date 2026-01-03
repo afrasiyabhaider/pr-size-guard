@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "PR Size Guard",
+  "name": "PR Size Guard - GitHub Pull Request Reviewer",
   "version": "1.0.0",
   "description": "Shows PR size at a glance on GitHub Pull Request pages.",
   "permissions": ["storage"],
