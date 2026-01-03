@@ -192,5 +192,5 @@ MIT License — feel free to use, modify, and distribute.
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://arcocia.tech">Arcocia Tech</a>
+  Made with ❤️ by <a href="https://www.linkedin.com/in/afrasiyab-haider/">Afrasiyab Haider</a>
 </p>

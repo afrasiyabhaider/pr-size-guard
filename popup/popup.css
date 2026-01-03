@@ -1,5 +1,5 @@
 /**
- * PR Size Guard — Popup Styles
+ * PR Size Guard — Popup Styles (Compact)
  */
 
 * {
@@ -10,33 +10,33 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.4;
   color: #24292f;
   background-color: #ffffff;
-  min-width: 320px;
+  min-width: 280px;
 }
 
 .container {
-  padding: 16px;
+  padding: 12px;
 }
 
 /* Header */
 .header {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #d0d7de;
 }
 
 .header h1 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #24292f;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: #57606a;
 }
 
@@ -44,21 +44,21 @@ body {
 #settings-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* Threshold groups */
 .threshold-group {
   border: 1px solid #d0d7de;
   border-radius: 6px;
-  padding: 12px;
+  padding: 8px 10px;
 }
 
 .threshold-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
   color: #ffffff;
 }
 
@@ -77,29 +77,29 @@ body {
 /* Input rows */
 .input-row {
   display: flex;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 .input-row label {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .input-label {
-  font-size: 11px;
+  font-size: 10px;
   color: #57606a;
   font-weight: 500;
 }
 
 .input-row input {
   width: 100%;
-  padding: 6px 10px;
-  font-size: 14px;
+  padding: 4px 8px;
+  font-size: 13px;
   border: 1px solid #d0d7de;
-  border-radius: 6px;
+  border-radius: 5px;
   background-color: #f6f8fa;
   color: #24292f;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -108,7 +108,7 @@ body {
 .input-row input:focus {
   outline: none;
   border-color: #0969da;
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.15);
+  box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.15);
   background-color: #ffffff;
 }
 
@@ -118,85 +118,29 @@ body {
 
 /* Hint text */
 .hint {
-  font-size: 11px;
+  font-size: 10px;
   color: #57606a;
   text-align: center;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 
 .hint strong {
   color: #8b0000;
 }
 
-/* Footer */
-.footer {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid #d0d7de;
-  text-align: center;
-  font-size: 11px;
-  color: #57606a;
-}
-
-.footer-credit {
-  margin-bottom: 8px;
-}
-
-.footer .heart {
-  color: #cf222e;
-  display: inline-block;
-  animation: heartbeat 1.5s ease-in-out infinite;
-}
-
-.footer a {
-  color: #0969da;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
-.footer-support {
-  margin-top: 6px;
-}
-
-.coffee-link {
-  display: inline-block;
-  padding: 6px 12px;
-  background-color: #ffdd00;
-  color: #000000 !important;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 11px;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.coffee-link:hover {
-  background-color: #ffcc00;
-  text-decoration: none !important;
-  transform: scale(1.02);
-}
-
-@keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
 /* Action buttons */
 .actions {
   display: flex;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
+  margin-top: 2px;
 }
 
 .btn {
   flex: 1;
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.15s ease;
   border: 1px solid transparent;
@@ -232,11 +176,11 @@ body {
 
 /* Status message */
 .status {
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 11px;
   text-align: center;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .status--success {
@@ -247,4 +191,60 @@ body {
 .status--error {
   background-color: #ffebe9;
   color: #cf222e;
+}
+
+/* Footer */
+.footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #d0d7de;
+  text-align: center;
+  font-size: 10px;
+  color: #57606a;
+}
+
+.footer-credit {
+  margin-bottom: 6px;
+}
+
+.footer .heart {
+  color: #cf222e;
+  display: inline-block;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.footer a {
+  color: #0969da;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer-support {
+  margin-top: 4px;
+}
+
+.coffee-link {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #ffdd00;
+  color: #000000 !important;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 10px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.coffee-link:hover {
+  background-color: #ffcc00;
+  text-decoration: none !important;
+  transform: scale(1.02);
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }

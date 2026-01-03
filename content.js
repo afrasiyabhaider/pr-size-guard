@@ -1,368 +1,85 @@
 /**
  * PR Size Guard — Content Script
- * Injects PR size badge into GitHub Pull Request pages.
+ * MINIMAL: No polling, no observers, just run once
  */
 
 (function () {
   'use strict';
 
-  // ============================================================
-  // Configuration
-  // ============================================================
-
-  const DEBUG = false; // Set to true during development
-
+  const BADGE_ID = 'pr-size-guard-badge';
+  
   const DEFAULTS = {
     small: { files: 5, lines: 100 },
     medium: { files: 15, lines: 400 },
     large: { files: 30, lines: 1000 }
   };
 
-  // Selector priority lists (fallbacks for GitHub DOM changes)
-  const SELECTORS = {
-    filesCount: [
-      '#files_tab_counter',
-      '[data-tab-item="files"] .Counter',
-      '.tabnav-tab[href*="files"] .Counter'
-    ],
-    diffStats: [
-      '.diffstat',
-      '#diffstat',
-      '.js-diff-progressive-container .diffstat'
-    ],
-    injectionTarget: [
-      '.gh-header-title',
-      '.js-issue-title',
-      '[data-testid="issue-title"]',
-      '.gh-header-show h1'
-    ]
-  };
+  let thresholds = null;
 
-  const BADGE_ID = 'pr-size-guard-badge';
-  const DEBOUNCE_MS = 300;
-  const MAX_RETRIES = 3;
-  const RETRY_DELAYS = [100, 300, 600];
+  function run() {
+    // Already have badge? Skip
+    if (document.getElementById(BADGE_ID)) return;
 
-  // ============================================================
-  // Utility Functions
-  // ============================================================
+    // Find injection target
+    const target = document.querySelector('.gh-header-title') || 
+                   document.querySelector('.js-issue-title');
+    if (!target) return;
 
-  function log(...args) {
-    if (DEBUG) {
-      console.log('[PR Size Guard]', ...args);
-    }
-  }
+    // Get stats
+    const diff = document.querySelector('.diffstat');
+    let stats = null;
+    let category = 'unavailable';
 
-  function debounce(fn, ms) {
-    let timeout;
-    return function (...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => fn.apply(this, args), ms);
-    };
-  }
-
-  function safeQuerySelector(selectors) {
-    for (const selector of selectors) {
-      try {
-        const element = document.querySelector(selector);
-        if (element) return element;
-      } catch (e) {
-        // Invalid selector, try next
-      }
-    }
-    return null;
-  }
-
-  function parseNumber(text) {
-    if (!text) return 0;
-    // Remove commas and non-numeric characters except digits
-    const cleaned = text.replace(/[^\d]/g, '');
-    const num = parseInt(cleaned, 10);
-    return isNaN(num) ? 0 : num;
-  }
-
-  // ============================================================
-  // Stats Extraction
-  // ============================================================
-
-  function extractPRStats() {
-    try {
-      // Extract files count
-      const filesElement = safeQuerySelector(SELECTORS.filesCount);
-      const filesChanged = filesElement ? parseNumber(filesElement.textContent) : null;
-
-      // Extract diff stats
-      const diffstat = safeQuerySelector(SELECTORS.diffStats);
-      if (!diffstat) {
-        log('Diffstat not found');
-        return null;
-      }
-
-      const diffText = diffstat.textContent || '';
+    if (diff) {
+      const text = diff.textContent || '';
+      const addMatch = text.match(/\+\s*([\d,]+)/);
+      const delMatch = text.match(/[-−]\s*([\d,]+)/);
+      const additions = addMatch ? parseInt(addMatch[1].replace(/,/g, ''), 10) : 0;
+      const deletions = delMatch ? parseInt(delMatch[1].replace(/,/g, ''), 10) : 0;
       
-      // Parse additions and deletions from text like "+123 −45" or "123 additions, 45 deletions"
-      const additionsMatch = diffText.match(/\+?([\d,]+)\s*(?:addition|line)/i) || 
-                             diffText.match(/\+\s*([\d,]+)/);
-      const deletionsMatch = diffText.match(/[-−]?([\d,]+)\s*(?:deletion|line)/i) || 
-                             diffText.match(/[-−]\s*([\d,]+)/);
-
-      const additions = additionsMatch ? parseNumber(additionsMatch[1]) : 0;
-      const deletions = deletionsMatch ? parseNumber(deletionsMatch[1]) : 0;
-
-      // If we couldn't get files count from tab, try to infer or return null
-      if (filesChanged === null && additions === 0 && deletions === 0) {
-        log('Could not extract any stats');
-        return null;
-      }
-
-      return {
-        filesChanged: filesChanged || 0,
-        additions,
-        deletions,
-        totalLines: additions + deletions
-      };
-    } catch (e) {
-      log('Error extracting stats:', e);
-      return null;
-    }
-  }
-
-  // ============================================================
-  // Classification
-  // ============================================================
-
-  function classifyPR(stats, thresholds) {
-    if (!stats) return 'unavailable';
-
-    const { filesChanged, totalLines } = stats;
-    const t = thresholds;
-
-    // Classify by files
-    let fileCategory;
-    if (filesChanged <= t.small.files) fileCategory = 'small';
-    else if (filesChanged <= t.medium.files) fileCategory = 'medium';
-    else if (filesChanged <= t.large.files) fileCategory = 'large';
-    else fileCategory = 'critical';
-
-    // Classify by lines
-    let lineCategory;
-    if (totalLines <= t.small.lines) lineCategory = 'small';
-    else if (totalLines <= t.medium.lines) lineCategory = 'medium';
-    else if (totalLines <= t.large.lines) lineCategory = 'large';
-    else lineCategory = 'critical';
-
-    // Return the worse of the two
-    const order = ['small', 'medium', 'large', 'critical'];
-    const fileIndex = order.indexOf(fileCategory);
-    const lineIndex = order.indexOf(lineCategory);
-
-    return order[Math.max(fileIndex, lineIndex)];
-  }
-
-  // ============================================================
-  // Badge Injection
-  // ============================================================
-
-  function removeBadge() {
-    const existing = document.getElementById(BADGE_ID);
-    if (existing) {
-      existing.remove();
-    }
-  }
-
-  function formatTooltip(category, stats) {
-    const labels = {
-      small: 'Small',
-      medium: 'Medium',
-      large: 'Large',
-      critical: 'Critical',
-      unavailable: 'Size: ?'
-    };
-
-    if (!stats || category === 'unavailable') {
-      return 'Could not determine PR size';
-    }
-
-    const lines = [
-      `PR Size: ${labels[category]}`,
-      `───────────────`,
-      `Files changed: ${stats.filesChanged}`,
-      `Lines added: +${stats.additions}`,
-      `Lines deleted: -${stats.deletions}`,
-      `Total lines: ${stats.totalLines}`
-    ];
-
-    return lines.join('\n');
-  }
-
-  function injectBadge(category, stats) {
-    try {
-      removeBadge();
-
-      const target = safeQuerySelector(SELECTORS.injectionTarget);
-      if (!target) {
-        log('Injection target not found');
-        return false;
-      }
-
-      const badge = document.createElement('span');
-      badge.id = BADGE_ID;
-      badge.className = `pr-size-guard-badge pr-size-guard--${category}`;
+      const filesEl = document.getElementById('files_tab_counter');
+      const files = filesEl ? parseInt(filesEl.textContent.replace(/\D/g, ''), 10) || 0 : 0;
       
-      const labels = {
-        small: 'Small',
-        medium: 'Medium',
-        large: 'Large',
-        dangerous: 'Dangerous',
-        unavailable: 'Size: ?'
-      };
-      
-      badge.textContent = labels[category] || labels.unavailable;
-      badge.title = formatTooltip(category, stats);
-
-      target.appendChild(badge);
-      log('Badge injected:', category);
-      return true;
-    } catch (e) {
-      log('Error injecting badge:', e);
-      return false;
+      if (files || additions || deletions) {
+        stats = { filesChanged: files, additions, deletions, totalLines: additions + deletions };
+        
+        // Classify
+        const t = thresholds || DEFAULTS;
+        const f = stats.filesChanged;
+        const l = stats.totalLines;
+        const fc = f <= t.small.files ? 0 : f <= t.medium.files ? 1 : f <= t.large.files ? 2 : 3;
+        const lc = l <= t.small.lines ? 0 : l <= t.medium.lines ? 1 : l <= t.large.lines ? 2 : 3;
+        category = ['small', 'medium', 'large', 'critical'][Math.max(fc, lc)];
+      }
     }
-  }
 
-  // ============================================================
-  // Storage
-  // ============================================================
-
-  let cachedThresholds = DEFAULTS;
-
-  async function loadThresholds() {
-    try {
-      const result = await chrome.storage.sync.get('thresholds');
-      cachedThresholds = result.thresholds || DEFAULTS;
-      log('Thresholds loaded:', cachedThresholds);
-    } catch (e) {
-      log('Error loading thresholds:', e);
-      cachedThresholds = DEFAULTS;
-    }
-  }
-
-  function setupStorageListener() {
-    try {
-      chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === 'sync' && changes.thresholds) {
-          cachedThresholds = changes.thresholds.newValue || DEFAULTS;
-          log('Thresholds updated:', cachedThresholds);
-          // Re-process current page with new thresholds
-          processPage();
-        }
-      });
-    } catch (e) {
-      log('Error setting up storage listener:', e);
-    }
-  }
-
-  // ============================================================
-  // Main Processing
-  // ============================================================
-
-  function processPage() {
-    const stats = extractPRStats();
-    const category = classifyPR(stats, cachedThresholds);
-    injectBadge(category, stats);
-    log('Page processed:', { stats, category });
-  }
-
-  function processPageWithRetry(attempt = 0) {
-    const stats = extractPRStats();
+    // Create badge
+    const labels = { small: 'Small', medium: 'Medium', large: 'Large', critical: 'Critical', unavailable: 'Size: ?' };
+    const badge = document.createElement('span');
+    badge.id = BADGE_ID;
+    badge.className = 'pr-size-guard-badge pr-size-guard--' + category;
+    badge.textContent = labels[category];
     
-    if (stats === null && attempt < MAX_RETRIES) {
-      log(`Stats not found, retry ${attempt + 1}/${MAX_RETRIES}`);
-      setTimeout(() => processPageWithRetry(attempt + 1), RETRY_DELAYS[attempt]);
-      return;
+    if (stats) {
+      badge.title = 'PR Size: ' + labels[category] + '\n───────────────\nFiles: ' + stats.filesChanged + '\nAdded: +' + stats.additions + '\nDeleted: -' + stats.deletions + '\nTotal: ' + stats.totalLines;
     }
-
-    const category = classifyPR(stats, cachedThresholds);
-    injectBadge(category, stats);
-    log('Page processed:', { stats, category });
+    
+    target.appendChild(badge);
   }
 
-  // ============================================================
-  // SPA Navigation Handling
-  // ============================================================
+  // Load settings then run
+  chrome.storage.sync.get('thresholds').then(function(r) {
+    thresholds = r.thresholds || DEFAULTS;
+    run();
+  }).catch(function() {
+    thresholds = DEFAULTS;
+    run();
+  });
 
-  let lastProcessedUrl = '';
-  let observer = null;
+  // Handle SPA navigation
+  document.addEventListener('turbo:render', function() {
+    document.getElementById(BADGE_ID)?.remove();
+    run();
+  });
 
-  function isPRPage() {
-    return /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(location.href);
-  }
-
-  function handleNavigation() {
-    if (!isPRPage()) {
-      removeBadge();
-      return;
-    }
-
-    if (location.href !== lastProcessedUrl) {
-      lastProcessedUrl = location.href;
-      processPageWithRetry();
-    }
-  }
-
-  const debouncedHandleNavigation = debounce(handleNavigation, DEBOUNCE_MS);
-
-  function setupObserver() {
-    if (observer) {
-      log('Observer already exists');
-      return;
-    }
-
-    observer = new MutationObserver(() => {
-      debouncedHandleNavigation();
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: false,
-      characterData: false
-    });
-
-    log('Observer initialized');
-  }
-
-  function setupNavigationListeners() {
-    // Handle browser back/forward
-    window.addEventListener('popstate', debouncedHandleNavigation);
-
-    // Handle GitHub Turbo navigation (if available)
-    document.addEventListener('turbo:load', debouncedHandleNavigation);
-
-    // Legacy PJAX support
-    document.addEventListener('pjax:end', debouncedHandleNavigation);
-  }
-
-  // ============================================================
-  // Initialization
-  // ============================================================
-
-  async function init() {
-    log('Initializing...');
-
-    await loadThresholds();
-    setupStorageListener();
-    setupObserver();
-    setupNavigationListeners();
-
-    // Initial processing
-    if (isPRPage()) {
-      lastProcessedUrl = location.href;
-      processPageWithRetry();
-    }
-
-    log('Initialization complete');
-  }
-
-  // Start
-  init();
 })();
