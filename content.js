@@ -170,7 +170,32 @@
     }
   }
 
-  function injectBadge(category) {
+  function formatTooltip(category, stats) {
+    const labels = {
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large',
+      dangerous: 'Dangerous',
+      unavailable: 'Size: ?'
+    };
+
+    if (!stats || category === 'unavailable') {
+      return 'Could not determine PR size';
+    }
+
+    const lines = [
+      `PR Size: ${labels[category]}`,
+      `───────────────`,
+      `Files changed: ${stats.filesChanged}`,
+      `Lines added: +${stats.additions}`,
+      `Lines deleted: -${stats.deletions}`,
+      `Total lines: ${stats.totalLines}`
+    ];
+
+    return lines.join('\n');
+  }
+
+  function injectBadge(category, stats) {
     try {
       removeBadge();
 
@@ -193,9 +218,7 @@
       };
       
       badge.textContent = labels[category] || labels.unavailable;
-      badge.title = category === 'unavailable' 
-        ? 'Could not determine PR size' 
-        : `PR Size: ${labels[category]}`;
+      badge.title = formatTooltip(category, stats);
 
       target.appendChild(badge);
       log('Badge injected:', category);
@@ -245,7 +268,7 @@
   function processPage() {
     const stats = extractPRStats();
     const category = classifyPR(stats, cachedThresholds);
-    injectBadge(category);
+    injectBadge(category, stats);
     log('Page processed:', { stats, category });
   }
 
@@ -259,7 +282,7 @@
     }
 
     const category = classifyPR(stats, cachedThresholds);
-    injectBadge(category);
+    injectBadge(category, stats);
     log('Page processed:', { stats, category });
   }
 
