@@ -88,3 +88,70 @@
 [data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--unavailable {
   background-color: #484f58;
 }
+
+/* ============================================================
+   PR List Page - Mini Badges
+   ============================================================ */
+
+.pr-size-guard-list-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  line-height: 1.4;
+  vertical-align: middle;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.pr-size-guard-list-badge.pr-size-guard--small {
+  background-color: #2ea44f;
+  color: #ffffff;
+}
+
+.pr-size-guard-list-badge.pr-size-guard--medium {
+  background-color: #d29922;
+  color: #ffffff;
+}
+
+.pr-size-guard-list-badge.pr-size-guard--large {
+  background-color: #cf222e;
+  color: #ffffff;
+}
+
+.pr-size-guard-list-badge.pr-size-guard--critical {
+  background-color: #8b0000;
+  color: #ffffff;
+}
+
+.pr-size-guard-list-badge.pr-size-guard--unavailable {
+  background-color: #6e7781;
+  color: #ffffff;
+}
+
+/* Dark mode for list badges */
+[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--small {
+  background-color: #238636;
+}
+
+[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--medium {
+  background-color: #9e6a03;
+}
+
+[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--large {
+  background-color: #da3633;
+}
+
+[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--critical {
+  background-color: #b91c1c;
+}
+
+[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--unavailable {
+  background-color: #484f58;
+}

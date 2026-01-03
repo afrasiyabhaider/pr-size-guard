@@ -7,7 +7,7 @@
   "host_permissions": ["https://github.com/*"],
   "content_scripts": [
     {
-      "matches": ["https://github.com/*/pull/*"],
+      "matches": ["https://github.com/*/pull/*", "https://github.com/*/pulls", "https://github.com/*/pulls?*"],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_end",
