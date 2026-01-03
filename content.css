@@ -3,14 +3,18 @@
  * All classes prefixed with pr-size-guard- to avoid GitHub conflicts.
  */
 
-/* CSS Custom Properties for colors (DRY) */
+/* CSS Custom Properties for DRY */
 :root {
+  /* Colors */
   --psg-color-small: #2ea44f;
   --psg-color-medium: #d29922;
   --psg-color-large: #cf222e;
   --psg-color-critical: #8b0000;
   --psg-color-unavailable: #6e7781;
   --psg-color-text: #ffffff;
+  
+  /* Typography */
+  --psg-font-family: var(--psg-font-family);
 }
 
 /* Dark mode colors */
@@ -33,7 +37,7 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-family: var(--psg-font-family);
   line-height: 1.5;
   vertical-align: middle;
   white-space: nowrap;
@@ -98,7 +102,7 @@
   border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-family: var(--psg-font-family);
   line-height: 1.4;
   vertical-align: middle;
   white-space: nowrap;

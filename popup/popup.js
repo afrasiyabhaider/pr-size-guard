@@ -6,6 +6,13 @@
 (function () {
   'use strict';
 
+  // Graceful exit if constants failed to load
+  if (!window.PRSizeGuard) {
+    console.error('[PR Size Guard] Failed to load shared constants');
+    document.body.innerHTML = '<p style="color:red;padding:20px;">Error loading extension. Please reload.</p>';
+    return;
+  }
+
   // Use shared constants (loaded via script tag in popup.html)
   const { DEFAULTS, DEFAULT_COLORS, TIMING } = window.PRSizeGuard;
   const { STATUS_DISPLAY_MS } = TIMING;

@@ -16,6 +16,12 @@
   // Constants
   // ============================================================
 
+  // Graceful exit if constants failed to load
+  if (!window.PRSizeGuard) {
+    console.error('[PR Size Guard] Failed to load shared constants');
+    return;
+  }
+
   const BADGE_ID = 'pr-size-guard-badge';
   const BADGE_CLASS = 'pr-size-guard-badge';
   const LIST_BADGE_CLASS = 'pr-size-guard-list-badge';
@@ -27,7 +33,8 @@
   const { 
     RETRY_BASE_DELAY_MS, 
     MAX_RETRY_ATTEMPTS, 
-    OBSERVER_TIMEOUT_MS, 
+    OBSERVER_TIMEOUT_MS,
+    OBSERVER_DEBOUNCE_MS,
     NAVIGATION_DEBOUNCE_MS 
   } = TIMING;
 
@@ -134,19 +141,21 @@
   }
 
   /**
-   * Check if current page is a PR detail page
+   * Check if URL is a PR detail page
+   * @param {string} [url=location.href] - URL to check
    * @returns {boolean}
    */
-  function isPRPage() {
-    return PR_PAGE_REGEX.test(location.href);
+  function isPRPage(url = location.href) {
+    return PR_PAGE_REGEX.test(url);
   }
 
   /**
-   * Check if current page is a PR list page
+   * Check if URL is a PR list page
+   * @param {string} [url=location.href] - URL to check
    * @returns {boolean}
    */
-  function isPRListPage() {
-    return PR_LIST_REGEX.test(location.href);
+  function isPRListPage(url = location.href) {
+    return PR_LIST_REGEX.test(url);
   }
 
   /**
@@ -358,7 +367,7 @@
         processPRPage();
         observer?.disconnect();
       }
-    }, 100);
+    }, OBSERVER_DEBOUNCE_MS);
 
     observer = new MutationObserver(debouncedProcess);
     
@@ -396,10 +405,11 @@
     // Only process if enabled
     if (!enabled) return;
 
-    if (isPRPage()) {
+    // Pass cached URL to avoid redundant location.href access
+    if (isPRPage(currentUrl)) {
       processPRPage();
       setupObserver();
-    } else if (isPRListPage()) {
+    } else if (isPRListPage(currentUrl)) {
       processPRListPage();
     }
   }
@@ -413,9 +423,7 @@
     // GitHub Turbo navigation
     document.addEventListener('turbo:load', debouncedNavigation);
     document.addEventListener('turbo:render', debouncedNavigation);
-    document.addEventListener('turbo:before-render', () => {
-      document.getElementById(BADGE_ID)?.remove();
-    });
+    document.addEventListener('turbo:before-render', removeBadges);
 
     // Legacy PJAX
     document.addEventListener('pjax:end', debouncedNavigation);
