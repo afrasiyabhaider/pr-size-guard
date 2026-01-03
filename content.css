@@ -1,0 +1,90 @@
+/**
+ * PR Size Guard — Badge Styles
+ * All classes prefixed with pr-size-guard- to avoid GitHub conflicts.
+ */
+
+/* Base badge styles */
+#pr-size-guard-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  vertical-align: middle;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+
+#pr-size-guard-badge:hover {
+  opacity: 0.9;
+}
+
+/* Size variants */
+.pr-size-guard--small {
+  background-color: #2ea44f;
+  color: #ffffff;
+}
+
+.pr-size-guard--medium {
+  background-color: #d29922;
+  color: #ffffff;
+}
+
+.pr-size-guard--large {
+  background-color: #cf222e;
+  color: #ffffff;
+}
+
+.pr-size-guard--dangerous {
+  background-color: #8b0000;
+  color: #ffffff;
+  animation: pr-size-guard-pulse 2s ease-in-out infinite;
+}
+
+.pr-size-guard--unavailable {
+  background-color: #6e7781;
+  color: #ffffff;
+}
+
+/* Pulse animation for dangerous PRs */
+@keyframes pr-size-guard-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Dark mode support - GitHub uses data-color-mode attribute */
+[data-color-mode="dark"] .pr-size-guard--small,
+[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--small {
+  background-color: #238636;
+}
+
+[data-color-mode="dark"] .pr-size-guard--medium,
+[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--medium {
+  background-color: #9e6a03;
+}
+
+[data-color-mode="dark"] .pr-size-guard--large,
+[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--large {
+  background-color: #da3633;
+}
+
+[data-color-mode="dark"] .pr-size-guard--dangerous,
+[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--dangerous {
+  background-color: #b91c1c;
+}
+
+[data-color-mode="dark"] .pr-size-guard--unavailable,
+[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--unavailable {
+  background-color: #484f58;
+}

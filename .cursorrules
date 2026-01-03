@@ -1,0 +1,63 @@
+# PR Size Guard — Cursor Rules
+
+## Project Context
+Chrome extension (Manifest V3) that injects PR size badges into GitHub Pull Request pages.
+MVP scope: 3-5 days. No backend, no auth, no AI, no analytics.
+
+## Strict Constraints
+- DO NOT add features beyond: badge injection, threshold settings, SPA navigation handling
+- DO NOT suggest GitLab, Bitbucket, or any non-GitHub support
+- DO NOT add notifications, CI integration, or team features
+- DO NOT use Manifest V2 patterns — this is MV3 only
+
+## Code Patterns
+
+### DOM Access
+- Always use selector priority lists with fallbacks
+- Wrap all DOM access in try/catch
+- Return null on failure, never throw
+
+### Content Script
+- Use `run_at: document_idle`
+- Single MutationObserver instance — prevent duplicates
+- Debounce badge injection (300ms)
+- All CSS classes prefixed with `pr-size-guard-`
+
+### Storage
+- Use `chrome.storage.sync` only
+- Always provide hardcoded DEFAULTS fallback
+- Cache thresholds locally, listen for `onChanged`
+
+### Error Handling
+- Silent failures in production (no console.log/error)
+- Use DEBUG flag for development logging
+- Show "Size: ?" badge on extraction failure — never leave UI empty
+
+## MV3 Requirements
+- No eval(), no new Function(), no dynamic code
+- No inline scripts in HTML
+- No remote code loading
+- Minimal permissions: ["storage"] + host_permissions for github.com only
+
+## File Structure
+```
+manifest.json
+content.js
+content.css
+popup/popup.html
+popup/popup.js
+popup/popup.css
+icons/icon-{16,48,128}.png
+```
+
+## Reference: Selector Priority
+```javascript
+// Files count
+['#files_tab_counter', '[data-tab-item="files"] .Counter']
+
+// Injection target
+['.gh-header-title', '.js-issue-title', '[data-testid="issue-title"]']
+```
+
+## When Asked to Test
+Remind user to test: PR→PR navigation, back/forward, dark mode, draft/merged/closed PRs.
