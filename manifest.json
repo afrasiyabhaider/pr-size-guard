@@ -11,8 +11,11 @@
   "commands": {
     "toggle-extension": {
       "suggested_key": {
-        "default": "Alt+Shift+P",
-        "mac": "Alt+Shift+P"
+        "default": "Alt+Shift+G",
+        "windows": "Alt+Shift+G",
+        "mac": "Command+Shift+G",
+        "chromeos": "Alt+Shift+G",
+        "linux": "Alt+Shift+G"
       },
       "description": "Toggle PR Size Guard on/off"
     }
