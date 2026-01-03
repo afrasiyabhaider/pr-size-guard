@@ -21,19 +21,17 @@ async function toggleExtension() {
     
     await chrome.storage.sync.set({ enabled: newState });
     
-    // Notify all GitHub tabs about the state change
+    // Notify all GitHub tabs about the state change (parallel for performance)
     const tabs = await chrome.tabs.query({ url: 'https://github.com/*' });
     
-    for (const tab of tabs) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, { 
+    await Promise.allSettled(
+      tabs.map(tab => 
+        chrome.tabs.sendMessage(tab.id, { 
           type: 'TOGGLE_EXTENSION', 
           enabled: newState 
-        });
-      } catch (e) {
-        // Tab might not have content script loaded
-      }
-    }
+        })
+      )
+    );
     
     // Show notification badge on extension icon
     await updateBadge(newState);

@@ -45,6 +45,7 @@ FILES=(
     "content.js"
     "content.css"
     "background.js"
+    "shared/"
     "popup/"
     "icons/"
 )

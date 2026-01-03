@@ -20,18 +20,21 @@
   const BADGE_CLASS = 'pr-size-guard-badge';
   const LIST_BADGE_CLASS = 'pr-size-guard-list-badge';
 
-  const DEFAULTS = {
-    small: { files: 5, lines: 100 },
-    medium: { files: 15, lines: 400 },
-    large: { files: 30, lines: 1000 }
+  // Use shared constants (loaded via manifest)
+  const { DEFAULTS, DEFAULT_COLORS, LABELS } = window.PRSizeGuard || {
+    DEFAULTS: { small: { files: 5, lines: 100 }, medium: { files: 15, lines: 400 }, large: { files: 30, lines: 1000 } },
+    DEFAULT_COLORS: { small: '#2ea44f', medium: '#d29922', large: '#cf222e', critical: '#8b0000' },
+    LABELS: { small: 'Small', medium: 'Medium', large: 'Large', critical: 'Critical', unavailable: 'Size: ?' }
   };
 
-  const DEFAULT_COLORS = {
-    small: '#2ea44f',
-    medium: '#d29922',
-    large: '#cf222e',
-    critical: '#8b0000'
-  };
+  // Performance: Compile regex once
+  const PR_PAGE_REGEX = /github\.com\/[^/]+\/[^/]+\/pull\/\d+/;
+  const PR_LIST_REGEX = /github\.com\/[^/]+\/[^/]+\/pulls/;
+
+  // Named timing constants
+  const RETRY_BASE_DELAY_MS = 100;
+  const OBSERVER_TIMEOUT_MS = 10000;
+  const NAVIGATION_DEBOUNCE_MS = 150;
 
   // Fallback selectors for GitHub DOM changes
   const SELECTORS = {
@@ -136,7 +139,7 @@
    * @returns {boolean}
    */
   function isPRPage() {
-    return /github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(location.href);
+    return PR_PAGE_REGEX.test(location.href);
   }
 
   /**
@@ -144,7 +147,7 @@
    * @returns {boolean}
    */
   function isPRListPage() {
-    return /github\.com\/[^/]+\/[^/]+\/pulls/.test(location.href);
+    return PR_LIST_REGEX.test(location.href);
   }
 
   /**
@@ -230,18 +233,10 @@
     const target = $(SELECTORS.prTitle);
     if (!target) return;
 
-    const labels = {
-      small: 'Small',
-      medium: 'Medium',
-      large: 'Large',
-      critical: 'Critical',
-      unavailable: 'Size: ?'
-    };
-
     const badge = document.createElement('span');
     badge.id = BADGE_ID;
     badge.className = `${BADGE_CLASS} pr-size-guard--${category}`;
-    badge.textContent = labels[category];
+    badge.textContent = LABELS[category];
 
     // Apply custom colors if available
     if (colors[category]) {
@@ -250,7 +245,7 @@
 
     if (stats) {
       badge.title = [
-        `PR Size: ${labels[category]}`,
+        `PR Size: ${LABELS[category]}`,
         '───────────────',
         `Files: ${stats.filesChanged}`,
         `Added: +${stats.additions}`,
@@ -271,7 +266,7 @@
     
     if (!stats && attempt < 5) {
       // Exponential backoff: 100, 200, 400, 800, 1600ms
-      const delay = 100 * Math.pow(2, attempt);
+      const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
       setTimeout(() => processPRPage(attempt + 1), delay);
       return;
     }
@@ -370,13 +365,13 @@
       characterData: false
     });
 
-    // Auto-disconnect after 10 seconds to prevent memory leaks
+    // Auto-disconnect after timeout to prevent memory leaks
     setTimeout(() => {
       if (observer) {
         observer.disconnect();
         observer = null;
       }
-    }, 10000);
+    }, OBSERVER_TIMEOUT_MS);
   }
 
   // ============================================================
@@ -405,7 +400,7 @@
     }
   }
 
-  const debouncedNavigation = debounce(handleNavigation, 150);
+  const debouncedNavigation = debounce(handleNavigation, NAVIGATION_DEBOUNCE_MS);
 
   /**
    * Setup navigation event listeners
@@ -424,18 +419,7 @@
     // Browser navigation
     window.addEventListener('popstate', debouncedNavigation);
 
-    // Fallback: check URL periodically for edge cases
-    let urlCheckCount = 0;
-    const urlChecker = setInterval(() => {
-      if (location.href !== lastUrl) {
-        debouncedNavigation();
-      }
-      urlCheckCount++;
-      // Stop after 30 checks (30 seconds)
-      if (urlCheckCount >= 30) {
-        clearInterval(urlChecker);
-      }
-    }, 1000);
+    // Note: URL polling removed for performance - navigation events are sufficient
   }
 
   // ============================================================

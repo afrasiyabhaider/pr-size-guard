@@ -3,6 +3,26 @@
  * All classes prefixed with pr-size-guard- to avoid GitHub conflicts.
  */
 
+/* CSS Custom Properties for colors (DRY) */
+:root {
+  --psg-color-small: #2ea44f;
+  --psg-color-medium: #d29922;
+  --psg-color-large: #cf222e;
+  --psg-color-critical: #8b0000;
+  --psg-color-unavailable: #6e7781;
+  --psg-color-text: #ffffff;
+}
+
+/* Dark mode colors */
+[data-color-mode="dark"],
+[data-color-mode="dark"][data-dark-theme="dark"] {
+  --psg-color-small: #238636;
+  --psg-color-medium: #9e6a03;
+  --psg-color-large: #da3633;
+  --psg-color-critical: #b91c1c;
+  --psg-color-unavailable: #484f58;
+}
+
 /* Base badge styles */
 #pr-size-guard-badge {
   display: inline-flex;
@@ -26,31 +46,31 @@
   opacity: 0.9;
 }
 
-/* Size variants */
+/* Size variants - using CSS variables */
 .pr-size-guard--small {
-  background-color: #2ea44f;
-  color: #ffffff;
+  background-color: var(--psg-color-small);
+  color: var(--psg-color-text);
 }
 
 .pr-size-guard--medium {
-  background-color: #d29922;
-  color: #ffffff;
+  background-color: var(--psg-color-medium);
+  color: var(--psg-color-text);
 }
 
 .pr-size-guard--large {
-  background-color: #cf222e;
-  color: #ffffff;
+  background-color: var(--psg-color-large);
+  color: var(--psg-color-text);
 }
 
 .pr-size-guard--critical {
-  background-color: #8b0000;
-  color: #ffffff;
+  background-color: var(--psg-color-critical);
+  color: var(--psg-color-text);
   animation: pr-size-guard-pulse 2s ease-in-out infinite;
 }
 
 .pr-size-guard--unavailable {
-  background-color: #6e7781;
-  color: #ffffff;
+  background-color: var(--psg-color-unavailable);
+  color: var(--psg-color-text);
 }
 
 /* Pulse animation for dangerous PRs */
@@ -63,31 +83,7 @@
   }
 }
 
-/* Dark mode support - GitHub uses data-color-mode attribute */
-[data-color-mode="dark"] .pr-size-guard--small,
-[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--small {
-  background-color: #238636;
-}
-
-[data-color-mode="dark"] .pr-size-guard--medium,
-[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--medium {
-  background-color: #9e6a03;
-}
-
-[data-color-mode="dark"] .pr-size-guard--large,
-[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--large {
-  background-color: #da3633;
-}
-
-[data-color-mode="dark"] .pr-size-guard--critical,
-[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--critical {
-  background-color: #b91c1c;
-}
-
-[data-color-mode="dark"] .pr-size-guard--unavailable,
-[data-color-mode="dark"][data-dark-theme="dark"] .pr-size-guard--unavailable {
-  background-color: #484f58;
-}
+/* Dark mode is handled via CSS custom properties above */
 
 /* ============================================================
    PR List Page - Mini Badges
@@ -110,48 +106,4 @@
   user-select: none;
 }
 
-.pr-size-guard-list-badge.pr-size-guard--small {
-  background-color: #2ea44f;
-  color: #ffffff;
-}
-
-.pr-size-guard-list-badge.pr-size-guard--medium {
-  background-color: #d29922;
-  color: #ffffff;
-}
-
-.pr-size-guard-list-badge.pr-size-guard--large {
-  background-color: #cf222e;
-  color: #ffffff;
-}
-
-.pr-size-guard-list-badge.pr-size-guard--critical {
-  background-color: #8b0000;
-  color: #ffffff;
-}
-
-.pr-size-guard-list-badge.pr-size-guard--unavailable {
-  background-color: #6e7781;
-  color: #ffffff;
-}
-
-/* Dark mode for list badges */
-[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--small {
-  background-color: #238636;
-}
-
-[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--medium {
-  background-color: #9e6a03;
-}
-
-[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--large {
-  background-color: #da3633;
-}
-
-[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--critical {
-  background-color: #b91c1c;
-}
-
-[data-color-mode="dark"] .pr-size-guard-list-badge.pr-size-guard--unavailable {
-  background-color: #484f58;
-}
+/* List badge colors inherit from CSS variables - no duplicates needed */
