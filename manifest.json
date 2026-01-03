@@ -5,6 +5,18 @@
   "description": "See GitHub PR size instantly. Shows Small/Medium/Large/Critical badges on Pull Requests. Helps code review.",
   "permissions": ["storage"],
   "host_permissions": ["https://github.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "toggle-extension": {
+      "suggested_key": {
+        "default": "Alt+Shift+P",
+        "mac": "Alt+Shift+P"
+      },
+      "description": "Toggle PR Size Guard on/off"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://github.com/*/pull/*", "https://github.com/*/pulls", "https://github.com/*/pulls?*"],

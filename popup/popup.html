@@ -9,8 +9,16 @@
 <body>
   <div class="container">
     <header class="header">
-      <h1>PR Size Guard</h1>
-      <p class="subtitle">Configure PR size thresholds</p>
+      <div class="header-row">
+        <div>
+          <h1>PR Size Guard</h1>
+          <p class="subtitle">Configure PR size thresholds</p>
+        </div>
+        <label class="toggle-switch" title="Toggle extension (Alt+Shift+P)">
+          <input type="checkbox" id="enabled-toggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </header>
 
     <form id="settings-form">

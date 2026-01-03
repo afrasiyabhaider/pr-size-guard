@@ -81,6 +81,7 @@
 
   let thresholds = DEFAULTS;
   let colors = DEFAULT_COLORS;
+  let enabled = true;
   let observer = null;
   let lastUrl = location.href;
 
@@ -390,9 +391,11 @@
     if (currentUrl === lastUrl) return;
     lastUrl = currentUrl;
 
-    // Clean up
-    document.getElementById(BADGE_ID)?.remove();
-    document.querySelectorAll(`.${LIST_BADGE_CLASS}`).forEach(el => el.remove());
+    // Clean up existing badges
+    removeBadges();
+
+    // Only process if enabled
+    if (!enabled) return;
 
     if (isPRPage()) {
       processPRPage();
@@ -444,12 +447,14 @@
    */
   async function loadSettings() {
     try {
-      const result = await chrome.storage.sync.get(['thresholds', 'colors']);
+      const result = await chrome.storage.sync.get(['thresholds', 'colors', 'enabled']);
       thresholds = result.thresholds || DEFAULTS;
       colors = result.colors || DEFAULT_COLORS;
+      enabled = result.enabled !== false; // Default to true
     } catch (e) {
       thresholds = DEFAULTS;
       colors = DEFAULT_COLORS;
+      enabled = true;
     }
   }
 
@@ -472,13 +477,55 @@
         needsRefresh = true;
       }
       
-      if (needsRefresh) {
+      if (changes.enabled !== undefined) {
+        enabled = changes.enabled.newValue !== false;
+        if (!enabled) {
+          // Remove badges when disabled
+          removeBadges();
+          return;
+        }
+        needsRefresh = true;
+      }
+      
+      if (needsRefresh && enabled) {
         if (isPRPage()) {
           processPRPage();
         } else if (isPRListPage()) {
           processPRListPage();
         }
       }
+    });
+  }
+
+  /**
+   * Remove all badges from the page
+   */
+  function removeBadges() {
+    document.getElementById(BADGE_ID)?.remove();
+    document.querySelectorAll(`.${LIST_BADGE_CLASS}`).forEach(el => el.remove());
+  }
+
+  /**
+   * Listen for toggle messages from background script
+   */
+  function setupMessageListener() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'TOGGLE_EXTENSION') {
+        enabled = message.enabled;
+        
+        if (enabled) {
+          if (isPRPage()) {
+            processPRPage();
+          } else if (isPRListPage()) {
+            processPRListPage();
+          }
+        } else {
+          removeBadges();
+        }
+        
+        sendResponse({ success: true });
+      }
+      return true;
     });
   }
 
@@ -489,14 +536,17 @@
   async function init() {
     await loadSettings();
     setupStorageListener();
+    setupMessageListener();
     setupNavigationListeners();
 
-    // Initial processing
-    if (isPRPage()) {
-      processPRPage();
-      setupObserver();
-    } else if (isPRListPage()) {
-      processPRListPage();
+    // Initial processing (only if enabled)
+    if (enabled) {
+      if (isPRPage()) {
+        processPRPage();
+        setupObserver();
+      } else if (isPRListPage()) {
+        processPRListPage();
+      }
     }
   }
 

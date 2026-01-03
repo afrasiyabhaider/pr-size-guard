@@ -23,6 +23,7 @@
   const resetBtn = document.getElementById('reset-btn');
   const resetColorsBtn = document.getElementById('reset-colors-btn');
   const statusEl = document.getElementById('status');
+  const enabledToggle = document.getElementById('enabled-toggle');
 
   // ============================================================
   // Form Utilities
@@ -114,14 +115,17 @@
 
   async function loadSettings() {
     try {
-      const result = await chrome.storage.sync.get(['thresholds', 'colors']);
+      const result = await chrome.storage.sync.get(['thresholds', 'colors', 'enabled']);
       const thresholds = result.thresholds || DEFAULTS;
       const colors = result.colors || DEFAULT_COLORS;
+      const enabled = result.enabled !== false; // Default to true
       setFormValues(thresholds);
       setColorValues(colors);
+      enabledToggle.checked = enabled;
     } catch (e) {
       setFormValues(DEFAULTS);
       setColorValues(DEFAULT_COLORS);
+      enabledToggle.checked = true;
     }
   }
 
@@ -163,6 +167,16 @@
   resetColorsBtn.addEventListener('click', () => {
     setColorValues(DEFAULT_COLORS);
     showStatus('Colors reset (not saved yet)', 'success');
+  });
+
+  enabledToggle.addEventListener('change', async () => {
+    const enabled = enabledToggle.checked;
+    try {
+      await chrome.storage.sync.set({ enabled });
+      showStatus(enabled ? 'Extension enabled' : 'Extension disabled', 'success');
+    } catch (e) {
+      showStatus('Failed to update setting', 'error');
+    }
   });
 
   // ============================================================
