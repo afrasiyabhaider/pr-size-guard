@@ -1,14 +1,29 @@
 {
   "manifest_version": 3,
   "name": "PR Size Guard - GitHub Pull Request Reviewer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "See GitHub PR size instantly. Shows Small/Medium/Large/Critical badges on Pull Requests. Helps code review.",
   "permissions": ["storage"],
   "host_permissions": ["https://github.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "toggle-extension": {
+      "suggested_key": {
+        "default": "Alt+Shift+G",
+        "windows": "Alt+Shift+G",
+        "mac": "Command+Shift+G",
+        "chromeos": "Alt+Shift+G",
+        "linux": "Alt+Shift+G"
+      },
+      "description": "Toggle PR Size Guard on/off"
+    }
+  },
   "content_scripts": [
     {
-      "matches": ["https://github.com/*/pull/*"],
-      "js": ["content.js"],
+      "matches": ["https://github.com/*/pull/*", "https://github.com/*/pulls", "https://github.com/*/pulls?*"],
+      "js": ["shared/constants.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_end",
       "all_frames": false

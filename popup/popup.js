@@ -6,15 +6,22 @@
 (function () {
   'use strict';
 
-  const DEFAULTS = {
-    small: { files: 5, lines: 100 },
-    medium: { files: 15, lines: 400 },
-    large: { files: 30, lines: 1000 }
-  };
+  // Graceful exit if constants failed to load
+  if (!window.PRSizeGuard) {
+    console.error('[PR Size Guard] Failed to load shared constants');
+    document.body.innerHTML = '<p style="color:red;padding:20px;">Error loading extension. Please reload.</p>';
+    return;
+  }
+
+  // Use shared constants (loaded via script tag in popup.html)
+  const { DEFAULTS, DEFAULT_COLORS, TIMING, ENABLED_DEFAULT } = window.PRSizeGuard;
+  const { STATUS_DISPLAY_MS } = TIMING;
 
   const form = document.getElementById('settings-form');
   const resetBtn = document.getElementById('reset-btn');
+  const resetColorsBtn = document.getElementById('reset-colors-btn');
   const statusEl = document.getElementById('status');
+  const enabledToggle = document.getElementById('enabled-toggle');
 
   // ============================================================
   // Form Utilities
@@ -37,6 +44,15 @@
     };
   }
 
+  function getColorValues() {
+    return {
+      small: form.color_small.value,
+      medium: form.color_medium.value,
+      large: form.color_large.value,
+      critical: form.color_critical.value
+    };
+  }
+
   function setFormValues(thresholds) {
     form.small_files.value = thresholds.small.files;
     form.small_lines.value = thresholds.small.lines;
@@ -46,10 +62,16 @@
     form.large_lines.value = thresholds.large.lines;
   }
 
+  function setColorValues(colors) {
+    form.color_small.value = colors.small;
+    form.color_medium.value = colors.medium;
+    form.color_large.value = colors.large;
+    form.color_critical.value = colors.critical;
+  }
+
   function validateThresholds(thresholds) {
     const { small, medium, large } = thresholds;
 
-    // Check all values are positive
     const allPositive = [
       small.files, small.lines,
       medium.files, medium.lines,
@@ -60,7 +82,6 @@
       return { valid: false, message: 'All values must be greater than 0' };
     }
 
-    // Check ordering: small < medium < large
     if (small.files >= medium.files || medium.files >= large.files) {
       return { valid: false, message: 'File thresholds must increase: Small < Medium < Large' };
     }
@@ -83,7 +104,7 @@
 
     setTimeout(() => {
       statusEl.hidden = true;
-    }, 3000);
+    }, STATUS_DISPLAY_MS);
   }
 
   // ============================================================
@@ -92,17 +113,23 @@
 
   async function loadSettings() {
     try {
-      const result = await chrome.storage.sync.get('thresholds');
+      const result = await chrome.storage.sync.get(['thresholds', 'colors', 'enabled']);
       const thresholds = result.thresholds || DEFAULTS;
+      const colors = result.colors || DEFAULT_COLORS;
+      const enabled = result.enabled ?? ENABLED_DEFAULT;
       setFormValues(thresholds);
+      setColorValues(colors);
+      enabledToggle.checked = enabled;
     } catch (e) {
       setFormValues(DEFAULTS);
+      setColorValues(DEFAULT_COLORS);
+      enabledToggle.checked = ENABLED_DEFAULT;
     }
   }
 
-  async function saveSettings(thresholds) {
+  async function saveSettings(thresholds, colors) {
     try {
-      await chrome.storage.sync.set({ thresholds });
+      await chrome.storage.sync.set({ thresholds, colors });
       showStatus('Settings saved!', 'success');
       return true;
     } catch (e) {
@@ -119,6 +146,7 @@
     e.preventDefault();
 
     const thresholds = getFormValues();
+    const colors = getColorValues();
     const validation = validateThresholds(thresholds);
 
     if (!validation.valid) {
@@ -126,12 +154,27 @@
       return;
     }
 
-    await saveSettings(thresholds);
+    await saveSettings(thresholds, colors);
   });
 
   resetBtn.addEventListener('click', () => {
     setFormValues(DEFAULTS);
     showStatus('Reset to defaults (not saved yet)', 'success');
+  });
+
+  resetColorsBtn.addEventListener('click', () => {
+    setColorValues(DEFAULT_COLORS);
+    showStatus('Colors reset (not saved yet)', 'success');
+  });
+
+  enabledToggle.addEventListener('change', async () => {
+    const enabled = enabledToggle.checked;
+    try {
+      await chrome.storage.sync.set({ enabled });
+      showStatus(enabled ? 'Extension enabled' : 'Extension disabled', 'success');
+    } catch (e) {
+      showStatus('Failed to update setting', 'error');
+    }
   });
 
   // ============================================================
