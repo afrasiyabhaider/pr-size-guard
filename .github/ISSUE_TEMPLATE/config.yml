@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/AfraSiyab/pr-size-guard/discussions
+    about: Ask questions, share ideas, or discuss the extension
+  - name: ☕ Support the Project
+    url: https://buymeacoffee.com/afrasiyabhaider
+    about: Buy me a coffee to support development
